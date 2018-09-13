@@ -15,17 +15,16 @@ def process_packet(samples):
 	trigger=floor+10*std_dev
 	#trigger=0.5
 	edges=signal.convolve(samples, [-1,-1,-1,-1,-1,0,1,1,1,1,1], mode='full', method='auto')
-	plot(edges)
-	plot(samples)
-	show()
 	temp = np.where(samples>trigger)
-	start=argmin(edges)#temp[0][0]
-	end=argmax(edges)#temp[0][-1]
+	start=argmin(edges)
+	end=argmax(edges)
 	data=samples[start:end]
+	len_data=len(data)
 
-	window = signal.boxcar(30)
+	window = signal.boxcar(20)
 	processed_data=signal.convolve(data, window, mode='valid', method='auto')
-	processed_data=(processed_data - processed_data.mean()) / processed_data.std()
+	data_for_mean=processed_data[int(0.25*len_data):int(0.75*len_data)]
+	processed_data=(processed_data - data_for_mean.mean()) / data_for_mean.std()
 	bit_data=np.sign(processed_data)
 	np.place(bit_data, bit_data==-1, [0])
 	edges=signal.convolve(bit_data, [-1,0,1], mode='full', method='auto')
@@ -49,12 +48,13 @@ def process_packet(samples):
 	plot(processed_data)
 	plot(bit_data,'r')
 	plot(edges,'k')
+	savefig('testplot_+'+str(time.time())+'.png')
+	clf()
 	#plot(range(len(bit_data)), y, 'bo')
-	show()
+	#show()
 
-f=open('sdr_good_msg12.log','r')
-samples=np.load(f)
-print("Loaded data from file")
-plot(samples)
-show()
-process_packet(samples)
+if __name__ == "__main__":
+	f=open('sdr_good_msg12.log','r')
+	samples=np.load(f)
+	print("Loaded data from file")
+	process_packet(samples)
